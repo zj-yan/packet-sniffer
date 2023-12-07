@@ -2,18 +2,26 @@ import argparse
 import os
 
 import getpass
-import hashlib
+import bcrypt
+# using bcrypt library instead of the simple SHA-256 hash
 
 from core import PacketSniffer
 from output import OutputToScreen
 
+
+# Using a more secure password hashing algorithm: bcrypt, instead of a simple hash function.
+# Bcrypt is designed to be slow and computationally intensive,
+# making it more resistant to brute-force attacks.
 def hash_password(password):
-    """Hash a password for storing."""
-    return hashlib.sha256(password.encode()).hexdigest()
+    # Implement a salt when hashing passwords.
+    # This adds an extra layer of security by ensuring that even if two users have the same password,
+    # their hashed passwords will be different.
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode(), salt)
+    return hashed.decode()
 
 def verify_password(stored_password_hash, provided_password):
-    """Verify a stored password against one provided by user."""
-    return stored_password_hash == hash_password(provided_password)
+    return bcrypt.checkpw(provided_password.encode(), stored_password_hash.encode())
 
 # Hashed password for admin 
 admin_password_hash = hash_password('admin')
