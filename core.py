@@ -4,7 +4,7 @@ from socket import PF_PACKET, SOCK_RAW, ntohs, socket
 from typing import Iterator
 
 import netprotocols
-
+import re
 
 class Decoder:
     def __init__(self, interface: str):
@@ -13,6 +13,11 @@ class Decoder:
         :param interface: Interface from which frames will be captured
             and decoded.
         """
+        # Validate the interface input to ensure it is a valid interface and
+        # avoid potential vulnerabilities.
+        # Ensure that it is a string and meets any expected format.
+        if not isinstance(interface, str) or not re.match(r'^[a-zA-Z0-9]+$', interface):
+            raise ValueError("Invalid interface format")
         self.interface = interface
         self.data = None
         self.protocol_queue = ["Ethernet"]
@@ -40,10 +45,16 @@ class Decoder:
         :param frame: A sequence of bytes representing the data received
             from a socket object.
         """
+        # When dynamically attaching attributes in _attach_protocols,
+        # ensure that the attribute names are sanitized
+        # to prevent potential code injection vulnerabilities.
         start = end = 0
         for proto in self.protocol_queue:
             try:
                 proto_class = getattr(netprotocols, proto)
+                # Sanitize attribute name to prevent code injection
+                attr_name = ''.join(c if c.isalnum() else '_' for c in proto.lower())
+                setattr(self, attr_name, protocol)
             except AttributeError:
                 continue
             end: int = start + proto_class.header_len
