@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import time
 from abc import ABC, abstractmethod
 
@@ -22,8 +21,19 @@ class OutputToScreen(Output):
         super().__init__(subject)
         self._frame = None
         self._display_data = display_data
-        self._user_role = user_role
+        self._user_role = self._validate_user_role(user_role)
         self._initialize()
+
+# the _validate_user_role method checks whether the provided user_role is one of the valid roles
+    # ('admin', 'end-user', 'developer').
+    # If it's not, a ValueError is raised with a message indicating the valid roles.
+    # This helps ensure that only valid user roles are accepted,
+    # and it provides a clear error message if an invalid role is provided.
+    def _validate_user_role(self, user_role):
+        valid_roles = ['admin', 'end-user', 'developer']
+        if user_role not in valid_roles:
+            raise ValueError(f"Invalid user role. Valid roles are {valid_roles}")
+        return user_role
 
     def _initialize(self) -> None:
         print("\n[>>>] Packet Sniffer initialized. Waiting for incoming "
